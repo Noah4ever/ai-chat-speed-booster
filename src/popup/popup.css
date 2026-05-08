@@ -151,34 +151,29 @@ body {
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     background: var(--bg-secondary);
-    position: relative;
 }
 
-/* Tooltip */
-.setting[data-tooltip]::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
+/* Tooltip — fixed so it can't be clipped by any parent overflow */
+.tooltip {
+    position: fixed;
+    width: 220px;
     background: var(--bg-tertiary);
     color: var(--text-primary);
     font-size: 11px;
-    line-height: 1.4;
-    padding: 6px 9px;
+    line-height: 1.5;
+    padding: 7px 10px;
     border-radius: 6px;
     border: 1px solid var(--border);
-    width: 200px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    z-index: 100;
     white-space: normal;
     text-align: left;
-    pointer-events: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: opacity 0.12s ease;
 }
 
-.setting[data-tooltip]:hover::after {
+.tooltip.visible {
     opacity: 1;
 }
 

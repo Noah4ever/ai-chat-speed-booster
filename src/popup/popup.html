@@ -10,6 +10,7 @@
 
 <body>
     <div class="popup">
+        <div id="tooltip" class="tooltip" role="tooltip"></div>
         <header class="popup-header">
             <div class="popup-header__title-row">
                 <div class="popup-header__brand">
@@ -43,14 +44,14 @@
 
             <!-- Fast mode + Auto load -->
             <div class="setting-row">
-                <div class="setting" data-tooltip="Trims API responses before the page renders them — much faster than hiding messages after the fact. Disable if you notice missing messages.">
+                <div class="setting" data-tooltip="Trims API responses before rendering. Faster than hiding after the fact. Disable if messages appear missing.">
                     <span class="setting__label">Fast mode</span>
                     <label class="toggle" aria-label="Enable or disable fetch interception">
                         <input type="checkbox" id="toggle-fetch-intercept" class="toggle__input">
                         <span class="toggle__slider"></span>
                     </label>
                 </div>
-                <div class="setting" data-tooltip="Automatically reveals one older message when you scroll near the top — so you can keep reading without clicking Load More.">
+                <div class="setting" data-tooltip="Reveals one older message when you scroll to the top, so you can read back without clicking Load More.">
                     <span class="setting__label">Auto load</span>
                     <label class="toggle" aria-label="Enable or disable auto-load">
                         <input type="checkbox" id="toggle-auto-load" class="toggle__input">
@@ -61,14 +62,14 @@
 
             <!-- Visible messages + Batch size -->
             <div class="setting-row">
-                <div class="setting" data-tooltip="How many conversation turns are shown at once. Lower values keep the page fast in very long chats. Hidden turns are still accessible via Load More.">
+                <div class="setting" data-tooltip="Turns shown at once. Lower = faster in long chats. Hidden turns are accessible via Load More.">
                     <div class="setting__info">
                         <span class="setting__label" id="visible-limit-label">Visible</span>
                         <span class="setting__hint">Shown at once</span>
                     </div>
                     <input type="number" id="visible-limit" class="setting__input" min="1" max="200" step="1" aria-labelledby="visible-limit-label">
                 </div>
-                <div class="setting" data-tooltip="How many turns are revealed each time you click Load More. Larger values let you scroll back further in one click.">
+                <div class="setting" data-tooltip="Turns revealed per Load More click. Larger = scroll further back in one click.">
                     <div class="setting__info">
                         <span class="setting__label" id="batch-size-label">Batch</span>
                         <span class="setting__hint">Per load more</span>
@@ -78,7 +79,7 @@
             </div>
 
             <!-- Status indicator -->
-            <div class="setting" data-tooltip="Shows a small floating badge on the chat page with how many messages are hidden and how many are visible. Choose which corner it appears in.">
+            <div class="setting" data-tooltip="Floating badge on the chat page showing hidden vs. visible turns. Pick which corner.">
                 <div class="setting__info">
                     <span class="setting__label">Status indicator</span>
                     <span class="setting__hint">Floating badge position</span>
@@ -98,7 +99,7 @@
             </div>
 
             <!-- Weekly requests (only on sites with userMessageSelector) -->
-            <div class="setting" id="request-counter" hidden data-tooltip="Counts messages you send this week. Set the limit to match your plan (e.g. 3,000 for ChatGPT Plus). Set to 0 to just count with no limit shown.">
+            <div class="setting" id="request-counter" hidden data-tooltip="Counts messages sent this week. Set limit to your plan's cap (e.g. 3,000 for Plus). 0 = count only, no limit.">
                 <div class="setting__info">
                     <span class="setting__label">Weekly requests</span>
                     <span class="setting__hint" id="request-counter-hint">Resets every Monday</span>

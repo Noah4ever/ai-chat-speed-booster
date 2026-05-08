@@ -212,6 +212,32 @@ themeToggle.addEventListener("click", async () => {
     }
 });
 
+// Tooltip: fixed-position bubble that can't be clipped by popup overflow
+const tooltip = document.getElementById("tooltip") as HTMLElement;
+const TOOLTIP_W = 220; // must match CSS width
+const POPUP_W = 300;   // body width
+
+document.querySelectorAll<HTMLElement>("[data-tooltip]").forEach((el) => {
+    el.addEventListener("mouseenter", () => {
+        const text = el.dataset.tooltip;
+        if (!text) return;
+        tooltip.textContent = text;
+        tooltip.classList.add("visible");
+
+        // Measure after showing so offsetHeight is accurate
+        const rect = el.getBoundingClientRect();
+        const h = tooltip.offsetHeight;
+        const gap = 6;
+        const top = rect.top - h - gap >= 0
+            ? rect.top - h - gap          // above
+            : rect.bottom + gap;           // below (near top of popup)
+
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${(POPUP_W - TOOLTIP_W) / 2}px`; // always centered
+    });
+    el.addEventListener("mouseleave", () => tooltip.classList.remove("visible"));
+});
+
 requestCountReset.addEventListener("click", async () => {
     if (!currentSiteId) return;
     const data = await safeSendMessage<WeeklyRequestCount>({
