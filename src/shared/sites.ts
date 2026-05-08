@@ -60,7 +60,6 @@ export interface SiteConfig {
     readonly statusAnchors?: StatusAnchors;
     readonly ui?: SiteUI;
     readonly fetchIntercept?: FetchInterceptConfig;
-    readonly weeklyRequestLimit?: number;
 }
 
 export const SITES: readonly SiteConfig[] = sitesConfig as SiteConfig[];

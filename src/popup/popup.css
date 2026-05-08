@@ -273,6 +273,18 @@ body {
     gap: 10px;
 }
 
+/* Paired settings row */
+.setting-row {
+    display: flex;
+    gap: 8px;
+}
+
+.setting-row .setting {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Weekly request counter */
 .request-counter__right {
     display: flex;
     align-items: center;
@@ -280,15 +292,24 @@ body {
     flex-shrink: 0;
 }
 
-.request-count-display {
+.request-count-value {
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     color: var(--text-secondary);
     white-space: nowrap;
 }
 
-.request-count-display--warn {
+.request-count-value--warn {
     color: #e5a000;
+}
+
+.request-limit-sep {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.request-limit-input {
+    width: 52px;
 }
 
 .icon-btn {

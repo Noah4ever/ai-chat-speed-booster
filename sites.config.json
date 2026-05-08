@@ -13,7 +13,6 @@
             "scrollContainer": "div[data-scroll-root]",
             "userMessageSelector": "[data-message-author-role=\"user\"]"
         },
-        "weeklyRequestLimit": 3000,
         "messageIdAttribute": "data-turn-id",
         "statusAnchors": {
             "name": "[data-testid=\"model-switcher-dropdown-button\"] > div",

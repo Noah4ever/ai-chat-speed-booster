@@ -6,6 +6,7 @@ import { SITES } from "../shared/sites";
 const toggleEnabled = document.getElementById("toggle-enabled") as HTMLInputElement;
 const toggleStatus = document.getElementById("toggle-status") as HTMLInputElement;
 const toggleFetchIntercept = document.getElementById("toggle-fetch-intercept") as HTMLInputElement;
+const toggleAutoLoad = document.getElementById("toggle-auto-load") as HTMLInputElement;
 const visibleLimitInput = document.getElementById("visible-limit") as HTMLInputElement;
 const batchSizeInput = document.getElementById("batch-size") as HTMLInputElement;
 const statusText = document.getElementById("status-text") as HTMLElement;
@@ -15,17 +16,19 @@ const positionButtons = positionPicker.querySelectorAll<HTMLButtonElement>(".pos
 const lightIcon = document.querySelector(".theme-toggle__icon.lucide-sun") as HTMLElement;
 const darkIcon = document.querySelector(".theme-toggle__icon.lucide-moon") as HTMLElement;
 const themeToggle = document.getElementById("theme-toggle") as HTMLButtonElement;
-const toggleAutoLoad = document.getElementById("toggle-auto-load") as HTMLInputElement;
 const requestCounter = document.getElementById("request-counter") as HTMLElement;
-const requestCountDisplay = document.getElementById("request-count-display") as HTMLElement;
+const requestCountValue = document.getElementById("request-count-value") as HTMLElement;
+const requestLimitSep = document.getElementById("request-limit-sep") as HTMLElement;
+const requestLimitInput = document.getElementById("request-limit-input") as HTMLInputElement;
 const requestCountHint = document.getElementById("request-counter-hint") as HTMLElement;
 const requestCountReset = document.getElementById("request-count-reset") as HTMLButtonElement;
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let limitSaveTimer: ReturnType<typeof setTimeout> | null = null;
 let currentSiteId: string | undefined;
-let currentSiteLimit: number | undefined;
+let lastCount = 0;
+let lastWeekStart = 0;
 
-/** Apply the selected theme to the popup UI. */
 function applyTheme(theme: Theme): void {
     document.documentElement.setAttribute("data-theme", theme);
     themeToggle.setAttribute("aria-pressed", String(theme === "light"));
@@ -38,7 +41,6 @@ function applyTheme(theme: Theme): void {
     }
 }
 
-/** Attempt to send a message to the background script; return null on failure. */
 async function safeSendMessage<T>(message: unknown): Promise<T | null> {
     try {
         return (await sendMessage<T>(message)) ?? null;
@@ -49,7 +51,7 @@ async function safeSendMessage<T>(message: unknown): Promise<T | null> {
 
 async function init(): Promise<void> {
     const config = await safeSendMessage<ExtensionConfig>({ type: MessageType.GET_CONFIG });
-    const finalConfig = config ?? DEFAULT_CONFIG; // Fallback to defaults if background script is unreachable
+    const finalConfig = config ?? DEFAULT_CONFIG;
     applyTheme(finalConfig.theme);
     renderConfig(finalConfig);
     await refreshStatus();
@@ -62,9 +64,9 @@ function renderConfig(config: ExtensionConfig): void {
     toggleFetchIntercept.checked = config.fetchInterceptEnabled;
     visibleLimitInput.value = String(config.visibleMessageLimit);
     batchSizeInput.value = String(config.loadMoreBatchSize);
+    requestLimitInput.value = String(config.weeklyRequestLimit);
     settingsSection.setAttribute("aria-disabled", String(!config.enabled));
 
-    // Highlight active position button
     positionButtons.forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.pos === config.statusPosition);
     });
@@ -94,8 +96,7 @@ async function refreshStatus(): Promise<void> {
 async function refreshRequestCounter(): Promise<void> {
     if (!currentSiteId) { requestCounter.hidden = true; return; }
     const site = SITES.find((s) => s.id === currentSiteId);
-    if (!site?.weeklyRequestLimit) { requestCounter.hidden = true; return; }
-    currentSiteLimit = site.weeklyRequestLimit;
+    if (!site?.selectors.userMessageSelector) { requestCounter.hidden = true; return; }
 
     const data = await safeSendMessage<WeeklyRequestCount>({
         type: MessageType.GET_REQUEST_COUNT,
@@ -103,21 +104,23 @@ async function refreshRequestCounter(): Promise<void> {
     });
     if (!data) { requestCounter.hidden = true; return; }
 
+    lastCount = data.count;
+    lastWeekStart = data.weekStart;
     renderRequestCount(data.count, data.weekStart);
     requestCounter.hidden = false;
 }
 
 function renderRequestCount(count: number, weekStart: number): void {
-    const limit = currentSiteLimit ?? 0;
-    requestCountDisplay.textContent = `${count.toLocaleString()} / ${limit.toLocaleString()}`;
+    const limit = parseInt(requestLimitInput.value, 10);
+    const hasLimit = !isNaN(limit) && limit > 0;
 
-    // Show next reset date (7 days after weekStart)
+    requestCountValue.textContent = count.toLocaleString();
+    requestLimitSep.hidden = !hasLimit;
+    requestCountValue.classList.toggle("request-count-value--warn", hasLimit && count / limit >= 0.8);
+
     const resetDate = new Date(weekStart + 7 * 24 * 60 * 60 * 1000);
     const formatted = resetDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     requestCountHint.textContent = `Resets ${formatted}`;
-
-    // Warn at ≥80 %
-    requestCountDisplay.classList.toggle("request-count-display--warn", limit > 0 && count / limit >= 0.8);
 }
 
 function clampInput(input: HTMLInputElement, min: number, max: number): number {
@@ -128,27 +131,32 @@ function clampInput(input: HTMLInputElement, min: number, max: number): number {
     return value;
 }
 
-/** Debounced auto-save for numeric inputs */
 function scheduleAutoSave(): void {
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
         saveTimer = null;
-        const visibleLimit = clampInput(
-            visibleLimitInput,
-            CONFIG_LIMITS.visibleMessageLimit.min,
-            CONFIG_LIMITS.visibleMessageLimit.max,
-        );
-        const batchSize = clampInput(
-            batchSizeInput,
-            CONFIG_LIMITS.loadMoreBatchSize.min,
-            CONFIG_LIMITS.loadMoreBatchSize.max,
-        );
+        const visibleLimit = clampInput(visibleLimitInput, CONFIG_LIMITS.visibleMessageLimit.min, CONFIG_LIMITS.visibleMessageLimit.max);
+        const batchSize = clampInput(batchSizeInput, CONFIG_LIMITS.loadMoreBatchSize.min, CONFIG_LIMITS.loadMoreBatchSize.max);
         const config = await safeSendMessage<ExtensionConfig>({
             type: MessageType.SET_CONFIG,
             payload: { visibleMessageLimit: visibleLimit, loadMoreBatchSize: batchSize },
         });
         if (config) renderConfig(config);
         await refreshStatus();
+    }, 600);
+}
+
+function scheduleLimitSave(): void {
+    if (limitSaveTimer) clearTimeout(limitSaveTimer);
+    limitSaveTimer = setTimeout(async () => {
+        limitSaveTimer = null;
+        const limit = clampInput(requestLimitInput, CONFIG_LIMITS.weeklyRequestLimit.min, CONFIG_LIMITS.weeklyRequestLimit.max);
+        const config = await safeSendMessage<ExtensionConfig>({
+            type: MessageType.SET_CONFIG,
+            payload: { weeklyRequestLimit: limit },
+        });
+        if (config) renderConfig(config);
+        renderRequestCount(lastCount, lastWeekStart);
     }, 600);
 }
 
@@ -178,6 +186,7 @@ toggleFetchIntercept.addEventListener("change", async () => {
 
 visibleLimitInput.addEventListener("input", scheduleAutoSave);
 batchSizeInput.addEventListener("input", scheduleAutoSave);
+requestLimitInput.addEventListener("input", scheduleLimitSave);
 
 positionPicker.addEventListener("click", async (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".position-picker__btn");
@@ -190,8 +199,6 @@ positionPicker.addEventListener("click", async (e) => {
     await refreshStatus();
 });
 
-
-/** Theme toggle button listener */
 themeToggle.addEventListener("click", async () => {
     const currentTheme = document.documentElement.getAttribute("data-theme") as "light" | "dark" || "dark";
     const newTheme = currentTheme === "dark" ? "light" : "dark";
@@ -211,7 +218,11 @@ requestCountReset.addEventListener("click", async () => {
         type: MessageType.RESET_REQUEST_COUNT,
         payload: { siteId: currentSiteId },
     });
-    if (data) renderRequestCount(data.count, data.weekStart);
+    if (data) {
+        lastCount = data.count;
+        lastWeekStart = data.weekStart;
+        renderRequestCount(data.count, data.weekStart);
+    }
 });
 
 init();

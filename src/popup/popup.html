@@ -19,46 +19,17 @@
                     </svg>
                     <span>Speed Booster</span>
                     <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle theme" aria-pressed="false">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="theme-toggle__icon lucide lucide-sun"
-                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon lucide lucide-sun">
                             <circle cx="12" cy="12" r="4" />
-                            <path d="M12 2v2" />
-                            <path d="M12 20v2" />
-                            <path d="m4.93 4.93 1.41 1.41" />
-                            <path d="m17.66 17.66 1.41 1.41" />
-                            <path d="M2 12h2" />
-                            <path d="M20 12h2" />
-                            <path d="m6.34 17.66-1.41 1.41" />
-                            <path d="m19.07 4.93-1.41 1.41" />
+                            <path d="M12 2v2" /><path d="M12 20v2" />
+                            <path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
+                            <path d="M2 12h2" /><path d="M20 12h2" />
+                            <path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
                         </svg>
-
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="theme-toggle__icon lucide lucide-moon"
-                        >
-                            <path
-                                d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
-                            />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="theme-toggle__icon lucide lucide-moon">
+                            <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
                         </svg>
-                    </button>  
+                    </button>
                 </div>
                 <label class="toggle" aria-label="Enable or disable extension">
                     <input type="checkbox" id="toggle-enabled" class="toggle__input">
@@ -69,57 +40,44 @@
         </header>
 
         <section class="popup-settings" aria-label="Settings">
-            <div class="setting">
-                <div class="setting__info">
+
+            <!-- Fast mode + Auto load -->
+            <div class="setting-row">
+                <div class="setting">
                     <span class="setting__label">Fast mode</span>
-                    <span class="setting__hint">Trim API responses before render</span>
+                    <label class="toggle" aria-label="Enable or disable fetch interception">
+                        <input type="checkbox" id="toggle-fetch-intercept" class="toggle__input">
+                        <span class="toggle__slider"></span>
+                    </label>
                 </div>
-                <label class="toggle" aria-label="Enable or disable fetch interception">
-                    <input type="checkbox" id="toggle-fetch-intercept" class="toggle__input">
-                    <span class="toggle__slider"></span>
-                </label>
-            </div>
-            <div class="setting">
-                <div class="setting__info">
-                    <span class="setting__label" id="visible-limit-label">Visible messages</span>
-                    <span class="setting__hint">Conversations shown at once</span>
-                </div>
-                <input type="number" id="visible-limit" class="setting__input" min="1" max="200" step="1"
-                    aria-labelledby="visible-limit-label">
-            </div>
-            <div class="setting">
-                <div class="setting__info">
-                    <span class="setting__label" id="batch-size-label">Batch size</span>
-                    <span class="setting__hint">Revealed per "Load More"</span>
-                </div>
-                <input type="number" id="batch-size" class="setting__input" min="1" max="50" step="1"
-                    aria-labelledby="batch-size-label">
-            </div>
-            <div class="setting">
-                <div class="setting__info">
-                    <span class="setting__label">Auto Load</span>
-                    <span class="setting__hint">Automatically load more on scrolling</span>
-                </div>
-                <label class="toggle" aria-label="Enable or disable auto-load">
-                    <input type="checkbox" id="toggle-auto-load" class="toggle__input">
-                    <span class="toggle__slider"></span>
-                </label>
-            </div>
-            <div class="setting" id="request-counter" hidden>
-                <div class="setting__info">
-                    <span class="setting__label">Weekly requests</span>
-                    <span class="setting__hint" id="request-counter-hint">Resets every Monday</span>
-                </div>
-                <div class="request-counter__right">
-                    <span id="request-count-display" class="request-count-display">0</span>
-                    <button id="request-count-reset" class="icon-btn" title="Reset counter" aria-label="Reset weekly request counter">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                            <path d="M3 3v5h5"/>
-                        </svg>
-                    </button>
+                <div class="setting">
+                    <span class="setting__label">Auto load</span>
+                    <label class="toggle" aria-label="Enable or disable auto-load">
+                        <input type="checkbox" id="toggle-auto-load" class="toggle__input">
+                        <span class="toggle__slider"></span>
+                    </label>
                 </div>
             </div>
+
+            <!-- Visible messages + Batch size -->
+            <div class="setting-row">
+                <div class="setting">
+                    <div class="setting__info">
+                        <span class="setting__label" id="visible-limit-label">Visible</span>
+                        <span class="setting__hint">Shown at once</span>
+                    </div>
+                    <input type="number" id="visible-limit" class="setting__input" min="1" max="200" step="1" aria-labelledby="visible-limit-label">
+                </div>
+                <div class="setting">
+                    <div class="setting__info">
+                        <span class="setting__label" id="batch-size-label">Batch</span>
+                        <span class="setting__hint">Per load more</span>
+                    </div>
+                    <input type="number" id="batch-size" class="setting__input" min="1" max="50" step="1" aria-labelledby="batch-size-label">
+                </div>
+            </div>
+
+            <!-- Status indicator -->
             <div class="setting">
                 <div class="setting__info">
                     <span class="setting__label">Status indicator</span>
@@ -138,6 +96,26 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Weekly requests (only on sites with userMessageSelector) -->
+            <div class="setting" id="request-counter" hidden>
+                <div class="setting__info">
+                    <span class="setting__label">Weekly requests</span>
+                    <span class="setting__hint" id="request-counter-hint">Resets every Monday</span>
+                </div>
+                <div class="request-counter__right">
+                    <span id="request-count-value" class="request-count-value">0</span>
+                    <span id="request-limit-sep" class="request-limit-sep"> / </span>
+                    <input type="number" id="request-limit-input" class="setting__input request-limit-input" min="0" max="99999" step="100" title="Weekly limit (0 = just count)">
+                    <button id="request-count-reset" class="icon-btn" title="Reset counter" aria-label="Reset weekly request counter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
         </section>
     </div>
 

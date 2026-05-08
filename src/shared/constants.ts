@@ -11,6 +11,7 @@ export const DEFAULT_CONFIG: Readonly<ExtensionConfig> = Object.freeze({
     fetchInterceptEnabled: true,
     theme: "dark",
     autoLoad: true,
+    weeklyRequestLimit: 3000,
 });
 
 /** localStorage key used by settings bridge → MAIN-world fetch interceptor. */
@@ -22,6 +23,7 @@ export const REQUEST_COUNTS_KEY = "acsb_request_counts" as const;
 export const CONFIG_LIMITS = Object.freeze({
     visibleMessageLimit: { min: 1, max: 200 },
     loadMoreBatchSize: { min: 1, max: 50 },
+    weeklyRequestLimit: { min: 0, max: 99999 },
 });
 
 export const EXTENSION_NAME = "AI Chat Speed Booster" as const;
