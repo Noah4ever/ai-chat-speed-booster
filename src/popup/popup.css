@@ -153,6 +153,10 @@ body {
     background: var(--bg-secondary);
 }
 
+.setting[data-tooltip] {
+    cursor: default;
+}
+
 /* Tooltip — fixed so it can't be clipped by any parent overflow */
 .tooltip {
     position: fixed;
