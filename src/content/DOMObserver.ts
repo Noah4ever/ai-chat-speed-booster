@@ -26,6 +26,7 @@ export class DOMObserver {
     private scrollEl: HTMLElement | null = null;
     private scrollRaf: number | null = null;
     private autoLoadEnabled = false;
+    private scrollRetryTimer: ReturnType<typeof setInterval> | null = null;
 
     constructor(currentSite: SiteConfig, callbacks: DOMObserverCallbacks) {
         this.currentSite = currentSite;
@@ -82,34 +83,44 @@ export class DOMObserver {
         this.visibleMessages = visible;
     }
 
-    SetAutoLoad(enable: boolean): void {    
-        if(this.autoLoadEnabled === enable) return; // No change in state, do nothing
+    SetAutoLoad(enable: boolean): void {
+        if (this.autoLoadEnabled === enable) return;
         this.autoLoadEnabled = enable;
 
-        if(this.autoLoadEnabled){
+        if (this.autoLoadEnabled) {
             logger.debug("Auto-load enabled: will load one more message when user scrolls to top");
-            
-            // Attach scroll listener to the resolved scroll container so callers
-            // can react to user scrolling (auto-load, etc.)
-            if (!this.scrollEl) this.scrollEl = this.findScrollContainer();
-            while(!this.scrollEl) {
-                setTimeout(() => {
-                    this.scrollEl = this.findScrollContainer();
-
-                }, 1000); // Keep trying to find a scroll container every second, as some sites load it asynchronously (e.g. Claude)
-                if(this.scrollEl) 
-                    break;    
-            }
-            this.handleScroll(); // Check scroll position immediately in case user is already near top when enabling auto-load
-            if (this.scrollEl) this.scrollEl.addEventListener("scroll", this.handleScroll, { passive: true });
-        }else{
+            this.attachScrollListener();
+        } else {
             logger.debug("Auto-load disabled: will not load more messages on scroll");
-
-            // Detach scroll listener to disable auto-load functionality
+            if (this.scrollRetryTimer) {
+                clearInterval(this.scrollRetryTimer);
+                this.scrollRetryTimer = null;
+            }
             if (this.scrollEl) this.scrollEl.removeEventListener("scroll", this.handleScroll);
             if (this.scrollRaf) cancelAnimationFrame(this.scrollRaf);
             this.scrollRaf = null;
         }
+    }
+
+    private attachScrollListener(): void {
+        if (!this.scrollEl) this.scrollEl = this.findScrollContainer();
+        if (this.scrollEl) {
+            this.handleScroll();
+            this.scrollEl.addEventListener("scroll", this.handleScroll, { passive: true });
+            return;
+        }
+        // Scroll container not yet in the DOM (some sites load it asynchronously) — poll until found
+        this.scrollRetryTimer = setInterval(() => {
+            this.scrollEl = this.findScrollContainer();
+            if (this.scrollEl) {
+                clearInterval(this.scrollRetryTimer!);
+                this.scrollRetryTimer = null;
+                if (this.autoLoadEnabled) {
+                    this.handleScroll();
+                    this.scrollEl.addEventListener("scroll", this.handleScroll, { passive: true });
+                }
+            }
+        }, 500);
     }
 
     resetAutoLoad(): void {

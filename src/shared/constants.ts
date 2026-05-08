@@ -16,6 +16,9 @@ export const DEFAULT_CONFIG: Readonly<ExtensionConfig> = Object.freeze({
 /** localStorage key used by settings bridge → MAIN-world fetch interceptor. */
 export const LOCALSTORAGE_BRIDGE_KEY = "acsb_bridge_config" as const;
 
+/** chrome.storage.local key for per-site weekly request counts. */
+export const REQUEST_COUNTS_KEY = "acsb_request_counts" as const;
+
 export const CONFIG_LIMITS = Object.freeze({
     visibleMessageLimit: { min: 1, max: 200 },
     loadMoreBatchSize: { min: 1, max: 50 },

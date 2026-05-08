@@ -1,6 +1,6 @@
 import { storageGet, storageSet, onStorageChanged } from "./browser-api";
-import { STORAGE_KEY, DEFAULT_CONFIG, CONFIG_LIMITS } from "./constants";
-import type { ExtensionConfig } from "./types";
+import { STORAGE_KEY, DEFAULT_CONFIG, CONFIG_LIMITS, REQUEST_COUNTS_KEY } from "./constants";
+import type { ExtensionConfig, WeeklyRequestCount } from "./types";
 import { logger } from "./logger";
 
 function clamp(value: number, min: number, max: number): number {
@@ -55,4 +55,39 @@ export function onConfigChanged(callback: (config: ExtensionConfig) => void): vo
         const newValue = changes[STORAGE_KEY].newValue as Partial<ExtensionConfig> | undefined;
         callback(sanitiseConfig(newValue));
     });
+}
+
+// ---------------------------------------------------------------------------
+// Weekly request counters
+// ---------------------------------------------------------------------------
+
+function getMondayUTCTimestamp(): number {
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon, …
+    const daysSinceMonday = (dayOfWeek + 6) % 7;
+    return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - daysSinceMonday);
+}
+
+export async function loadRequestCount(siteId: string): Promise<WeeklyRequestCount> {
+    const raw = await storageGet<Record<string, WeeklyRequestCount>>(REQUEST_COUNTS_KEY);
+    const weekStart = getMondayUTCTimestamp();
+    const entry = raw?.[siteId];
+    if (!entry || entry.weekStart !== weekStart) return { count: 0, weekStart };
+    return entry;
+}
+
+export async function incrementRequestCount(siteId: string, amount = 1): Promise<WeeklyRequestCount> {
+    const raw = (await storageGet<Record<string, WeeklyRequestCount>>(REQUEST_COUNTS_KEY)) ?? {};
+    const weekStart = getMondayUTCTimestamp();
+    const existing = raw[siteId];
+    const count = (existing?.weekStart === weekStart ? existing.count : 0) + amount;
+    await storageSet(REQUEST_COUNTS_KEY, { ...raw, [siteId]: { count, weekStart } });
+    return { count, weekStart };
+}
+
+export async function resetRequestCount(siteId: string): Promise<WeeklyRequestCount> {
+    const raw = (await storageGet<Record<string, WeeklyRequestCount>>(REQUEST_COUNTS_KEY)) ?? {};
+    const weekStart = getMondayUTCTimestamp();
+    await storageSet(REQUEST_COUNTS_KEY, { ...raw, [siteId]: { count: 0, weekStart } });
+    return { count: 0, weekStart };
 }

@@ -3,7 +3,7 @@ import { MessageManager } from "./MessageManager";
 import { LoadMoreButton, StatusIndicator } from "./UIComponents";
 import { detectCurrentSite, type SiteConfig } from "../shared/sites";
 import { loadConfig, onConfigChanged } from "../shared/storage";
-import { onMessage } from "../shared/browser-api";
+import { onMessage, sendMessage } from "../shared/browser-api";
 import {
     MessageType,
     type ExtensionConfig,
@@ -115,6 +115,21 @@ function scheduleInitialScan(): void {
 function handleMessagesAdded(elements: HTMLElement[]): void {
     messageManager.addMessages(elements);
     refreshUI();
+    countNewUserRequests(elements);
+}
+
+function countNewUserRequests(elements: HTMLElement[]): void {
+    const sel = currentSite.selectors.userMessageSelector;
+    if (!sel) return;
+    const count = elements.filter(
+        (el) => el.matches(sel) || el.querySelector(sel) !== null,
+    ).length;
+    if (count > 0) {
+        sendMessage({
+            type: MessageType.INCREMENT_REQUEST_COUNT,
+            payload: { siteId: currentSite.id, count },
+        }).catch(() => {});
+    }
 }
 
 /**
@@ -201,7 +216,9 @@ function handleMessagesReset(): void {
 
 function handleExtensionMessage(message: unknown): ExtensionStatus | undefined {
     const msg = message as { type?: string };
-    if (msg.type === MessageType.GET_STATUS) return messageManager.getStatus();
+    if (msg.type === MessageType.GET_STATUS) {
+        return { ...messageManager.getStatus(), siteId: currentSite.id };
+    }
     return undefined;
 }
 

@@ -1,6 +1,7 @@
 import { sendMessage } from "../shared/browser-api";
 import { CONFIG_LIMITS, DEFAULT_CONFIG } from "../shared/constants";
-import { MessageType, Theme, type ExtensionConfig, type ExtensionStatus, type StatusPosition } from "../shared/types";
+import { MessageType, Theme, type ExtensionConfig, type ExtensionStatus, type StatusPosition, type WeeklyRequestCount } from "../shared/types";
+import { SITES } from "../shared/sites";
 
 const toggleEnabled = document.getElementById("toggle-enabled") as HTMLInputElement;
 const toggleStatus = document.getElementById("toggle-status") as HTMLInputElement;
@@ -14,9 +15,15 @@ const positionButtons = positionPicker.querySelectorAll<HTMLButtonElement>(".pos
 const lightIcon = document.querySelector(".theme-toggle__icon.lucide-sun") as HTMLElement;
 const darkIcon = document.querySelector(".theme-toggle__icon.lucide-moon") as HTMLElement;
 const themeToggle = document.getElementById("theme-toggle") as HTMLButtonElement;
-const toggleAutoLoad = document.getElementById("toggle-auto-load") as HTMLInputElement; // New auto-load toggle element
+const toggleAutoLoad = document.getElementById("toggle-auto-load") as HTMLInputElement;
+const requestCounter = document.getElementById("request-counter") as HTMLElement;
+const requestCountDisplay = document.getElementById("request-count-display") as HTMLElement;
+const requestCountHint = document.getElementById("request-counter-hint") as HTMLElement;
+const requestCountReset = document.getElementById("request-count-reset") as HTMLButtonElement;
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let currentSiteId: string | undefined;
+let currentSiteLimit: number | undefined;
 
 /** Apply the selected theme to the popup UI. */
 function applyTheme(theme: Theme): void {
@@ -70,14 +77,47 @@ async function refreshStatus(): Promise<void> {
             statusText.textContent =
                 `${Math.floor(status.visibleMessages / 2)}/${Math.floor(status.totalMessages / 2)} messages visible` +
                 (status.hiddenMessages > 0 ? ` · ${Math.floor(status.hiddenMessages / 2)} hidden` : "");
-            settingsSection.style.display = ""; // Show if the site is a valid site
+            settingsSection.style.display = "";
+            currentSiteId = status.siteId;
+            await refreshRequestCounter();
         } else {
-            settingsSection.style.display = "none"; // Hide if the site is not a valid site
+            settingsSection.style.display = "none";
             statusText.textContent = "Open a supported AI chat to see status";
+            currentSiteId = undefined;
+            requestCounter.hidden = true;
         }
     } catch {
         statusText.textContent = "Unable to fetch status";
     }
+}
+
+async function refreshRequestCounter(): Promise<void> {
+    if (!currentSiteId) { requestCounter.hidden = true; return; }
+    const site = SITES.find((s) => s.id === currentSiteId);
+    if (!site?.weeklyRequestLimit) { requestCounter.hidden = true; return; }
+    currentSiteLimit = site.weeklyRequestLimit;
+
+    const data = await safeSendMessage<WeeklyRequestCount>({
+        type: MessageType.GET_REQUEST_COUNT,
+        payload: { siteId: currentSiteId },
+    });
+    if (!data) { requestCounter.hidden = true; return; }
+
+    renderRequestCount(data.count, data.weekStart);
+    requestCounter.hidden = false;
+}
+
+function renderRequestCount(count: number, weekStart: number): void {
+    const limit = currentSiteLimit ?? 0;
+    requestCountDisplay.textContent = `${count.toLocaleString()} / ${limit.toLocaleString()}`;
+
+    // Show next reset date (7 days after weekStart)
+    const resetDate = new Date(weekStart + 7 * 24 * 60 * 60 * 1000);
+    const formatted = resetDate.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    requestCountHint.textContent = `Resets ${formatted}`;
+
+    // Warn at ≥80 %
+    requestCountDisplay.classList.toggle("request-count-display--warn", limit > 0 && count / limit >= 0.8);
 }
 
 function clampInput(input: HTMLInputElement, min: number, max: number): number {
@@ -163,6 +203,15 @@ themeToggle.addEventListener("click", async () => {
         applyTheme(config.theme);
         renderConfig(config);
     }
+});
+
+requestCountReset.addEventListener("click", async () => {
+    if (!currentSiteId) return;
+    const data = await safeSendMessage<WeeklyRequestCount>({
+        type: MessageType.RESET_REQUEST_COUNT,
+        payload: { siteId: currentSiteId },
+    });
+    if (data) renderRequestCount(data.count, data.weekStart);
 });
 
 init();

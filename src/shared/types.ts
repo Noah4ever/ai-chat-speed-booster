@@ -35,7 +35,10 @@ export enum MessageType {
     TOGGLE_ENABLED = "TOGGLE_ENABLED",
     TOGGLE_STATUS = "TOGGLE_STATUS",
     TOGGLE_FETCH_INTERCEPT = "TOGGLE_FETCH_INTERCEPT",
-    TOGGLE_AUTO_LOAD = "TOGGLE_AUTO_LOAD", // New message type for toggling auto-load
+    TOGGLE_AUTO_LOAD = "TOGGLE_AUTO_LOAD",
+    GET_REQUEST_COUNT = "GET_REQUEST_COUNT",
+    INCREMENT_REQUEST_COUNT = "INCREMENT_REQUEST_COUNT",
+    RESET_REQUEST_COUNT = "RESET_REQUEST_COUNT",
 }
 
 export interface ExtensionMessage {
@@ -70,4 +73,10 @@ export interface ExtensionStatus {
     readonly hiddenMessages: number;
     readonly showStatus: boolean;
     readonly statusPosition: StatusPosition;
+    readonly siteId?: string;
+}
+
+export interface WeeklyRequestCount {
+    readonly count: number;
+    readonly weekStart: number;
 }

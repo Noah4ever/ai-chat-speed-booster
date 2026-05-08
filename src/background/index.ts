@@ -1,4 +1,4 @@
-import { loadConfig, saveConfig } from "../shared/storage";
+import { loadConfig, saveConfig, loadRequestCount, incrementRequestCount, resetRequestCount } from "../shared/storage";
 import { onMessage, api } from "../shared/browser-api";
 import { MessageType } from "../shared/types";
 import type { ExtensionConfig, ExtensionMessageUnion, ExtensionStatus } from "../shared/types";
@@ -62,6 +62,21 @@ onMessage(async (message): Promise<unknown> => {
             const updated = await saveConfig({ autoLoad: !current.autoLoad });
             await broadcastToContentScripts({ type: MessageType.CONFIG_UPDATED, payload: updated });
             return updated;
+        }
+
+        case MessageType.GET_REQUEST_COUNT: {
+            const siteId = (msg as { payload?: { siteId?: string } }).payload?.siteId ?? "";
+            return await loadRequestCount(siteId);
+        }
+
+        case MessageType.INCREMENT_REQUEST_COUNT: {
+            const incPayload = (msg as { payload?: { siteId?: string; count?: number } }).payload ?? {};
+            return await incrementRequestCount(incPayload.siteId ?? "", incPayload.count ?? 1);
+        }
+
+        case MessageType.RESET_REQUEST_COUNT: {
+            const siteId = (msg as { payload?: { siteId?: string } }).payload?.siteId ?? "";
+            return await resetRequestCount(siteId);
         }
 
         default:

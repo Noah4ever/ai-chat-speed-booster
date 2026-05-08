@@ -105,6 +105,21 @@
                     <span class="toggle__slider"></span>
                 </label>
             </div>
+            <div class="setting" id="request-counter" hidden>
+                <div class="setting__info">
+                    <span class="setting__label">Weekly requests</span>
+                    <span class="setting__hint" id="request-counter-hint">Resets every Monday</span>
+                </div>
+                <div class="request-counter__right">
+                    <span id="request-count-display" class="request-count-display">0</span>
+                    <button id="request-count-reset" class="icon-btn" title="Reset counter" aria-label="Reset weekly request counter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
             <div class="setting">
                 <div class="setting__info">
                     <span class="setting__label">Status indicator</span>
