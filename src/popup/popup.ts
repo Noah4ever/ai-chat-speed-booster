@@ -11,6 +11,7 @@ const toggleHideOld = document.getElementById("toggle-hide-old") as HTMLInputEle
 const visibleLimitInput = document.getElementById("visible-limit") as HTMLInputElement;
 const batchSizeInput = document.getElementById("batch-size") as HTMLInputElement;
 const statusText = document.getElementById("status-text") as HTMLElement;
+const versionText = document.getElementById("version-text") as HTMLElement;
 const settingsSection = document.querySelector(".popup-settings") as HTMLElement;
 const positionPicker = document.getElementById("position-picker") as HTMLElement;
 const positionButtons = positionPicker.querySelectorAll<HTMLButtonElement>(".position-picker__btn");
@@ -51,6 +52,9 @@ async function safeSendMessage<T>(message: unknown): Promise<T | null> {
 }
 
 async function init(): Promise<void> {
+    const manifest = chrome.runtime.getManifest();
+    versionText.textContent = `(v${manifest.version})`; // New: set the version text from manifest
+
     const config = await safeSendMessage<ExtensionConfig>({ type: MessageType.GET_CONFIG });
     const finalConfig = config ?? DEFAULT_CONFIG;
     applyTheme(finalConfig.theme);
@@ -81,7 +85,7 @@ async function refreshStatus(): Promise<void> {
             statusText.textContent =
                 `${Math.floor(status.visibleMessages / 2)}/${Math.floor(status.totalMessages / 2)} messages visible` +
                 (status.hiddenMessages > 0 ? ` · ${Math.floor(status.hiddenMessages / 2)} hidden` : "");
-            settingsSection.style.display = "";
+            settingsSection.style.display = "flex"; // Set to flex only when the site is actually supported
             currentSiteId = status.siteId;
             await refreshRequestCounter();
         } else {

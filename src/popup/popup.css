@@ -82,6 +82,13 @@ body {
     color: var(--accent);
 }
 
+.popup-header__status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .popup-header__status {
     margin-top: 6px;
     font-size: 12px;
@@ -139,7 +146,7 @@ body {
 
 .popup-settings {
     padding: 4px 15px 15px;
-    display: flex;
+    display: none; /* Hidden by default to prevent settings UI flashing on unsupported sites */
     flex-direction: column;
     gap: 8px;
 }
@@ -227,6 +234,7 @@ body {
     outline: none;
     transition: border-color var(--transition);
     -moz-appearance: textfield;
+    appearance: textfield; /* To remove the warning */
 }
 
 .setting__input::-webkit-inner-spin-button,

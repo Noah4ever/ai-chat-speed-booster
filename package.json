@@ -1,6 +1,6 @@
 {
     "name": "ai-chat-speed-booster",
-    "version": "1.4.4",
+    "version": "1.4.5",
     "description": "Browser extension that speeds up AI chat apps (ChatGPT, Claude, etc.) by lazily loading conversation messages with FIFO management",
     "private": true,
     "scripts": {

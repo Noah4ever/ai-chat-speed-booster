@@ -238,7 +238,7 @@ export class DOMObserver {
     }
 
     private static readonly AUTO_LOAD_COOLDOWN_MS = 800;
-
+/*
     private readonly handleScroll = (): void => {
         if (this.scrollRaf) cancelAnimationFrame(this.scrollRaf);
         if (this.visibleMessages >= this.totalMessages) return; // nothing hidden left to reveal
@@ -258,4 +258,53 @@ export class DOMObserver {
             this.callbacks.onScrollToTop();
         });
     };
+*/
+
+	private readonly handleScroll = (): void => {
+		if (this.scrollRaf) cancelAnimationFrame(this.scrollRaf);
+		if (this.visibleMessages >= this.totalMessages) return; // nothing hidden left to reveal
+
+		this.scrollRaf = requestAnimationFrame(() => {
+			const el = this.scrollEl ?? this.findScrollContainer();
+			if (!el) return;
+
+			const max = el.scrollHeight - el.clientHeight;
+			const percentFromTop = max > 0 ? (el.scrollTop / max) * 100 : 100;
+
+			if (percentFromTop > 10) return;
+
+			// I still prefer this approach over the previous cooldown/debounce logic,
+			// since that depended on the previous scroll tick timing and could become
+			// unreliable while the user was actively scrolling near the top.
+			//
+			// In practice, users could end up needing to scroll down and back up again
+			// before auto-load would trigger, because all scroll events inside the
+			// cooldown window were ignored.
+			//
+			// This approach triggers auto-load immediately, then slightly scrolls down
+			// afterward only if the UI itself did not already shift the scroll position,
+			// as in Gemini, preventing repeated auto-load triggers while keeping
+			// scrolling responsive.
+			//
+			// Keeping the old implementation commented for now since it can easily be
+			// restored if needed.
+
+			this.callbacks.onScrollToTop();
+
+			requestAnimationFrame(() => {
+				const updatedMax = el.scrollHeight - el.clientHeight;
+				const updatedPercent =
+					updatedMax > 0 ? (el.scrollTop / updatedMax) * 100 : 100;
+
+				if (updatedPercent <= 10) {
+					el.scrollTo({
+						top: 0.12 * el.scrollHeight,
+						behavior: "smooth"
+					});
+
+					logger.debug("Auto scrolled down slightly to prevent multiple auto-load triggers");
+				}
+			});
+		});
+	};
 }
